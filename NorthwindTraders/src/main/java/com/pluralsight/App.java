@@ -1,5 +1,7 @@
 package com.pluralsight;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.*;
 import java.util.Scanner;
 
@@ -18,24 +20,33 @@ public class App {
             System.exit(1);
         }
 
+        //gets the username and password
         String username = args[0];
         String password = args[1];
 
-        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password)) {
+try (BasicDataSource dataSource = new BasicDataSource(); ) {
 
-            boolean appRunning = true;
+        // Configure the dataSource
+        dataSource.setUrl("jdbc:mysql://localhost:3306/northwind");
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
 
-            while (appRunning) {
+        Connection connection = dataSource.getConnection();
 
-                System.out.println("1) Display All Products");
-                System.out.println("2) View All customers");
-                System.out.println("3) Display all categories");
-                System.out.println("0) Exit");
-                System.out.println("Select an option: ");
+        boolean appRunning = true;
 
-                int subOption = scanner.nextInt();
+        while (appRunning) {
+
+            System.out.println("1) Display All Products");
+            System.out.println("2) View All customers");
+            System.out.println("3) Display all categories");
+            System.out.println("0) Exit");
+            System.out.println("Select an option: ");
+
+            int subOption = scanner.nextInt();
 
                 switch (subOption) {
+
                     case 1:
                         viewProducts(connection);
                         break;
@@ -62,8 +73,8 @@ public class App {
 
                 }
 
-
             }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +111,6 @@ public class App {
                 double unitPrice = resultSet.getInt("UnitPrice");
                 int unitStock = resultSet.getInt("UnitsInStock");
                 System.out.printf("%-4d %-20s  %-7.2f %-6d\n", id, productName, unitPrice, unitStock);
-
             }
 
         } catch (SQLException e) {
@@ -115,7 +125,6 @@ public class App {
         ResultSet resultSet1 = null;
 
         try (
-
                 PreparedStatement preparedStatement = connection.prepareStatement(
                         "SELECT " +
                                 " ContactName, " +
@@ -123,11 +132,10 @@ public class App {
                                 " City, " +
                                 "Country, " +
                                 " Phone " +
-                                "FROM" +
+                            "FROM" +
                                 " Customers " +
-                                "ORDER BY " +
+                            "ORDER BY " +
                                 "Country");
-
 
                 ResultSet resultSet = preparedStatement.executeQuery();
         ) {
@@ -206,10 +214,5 @@ public class App {
             e.printStackTrace();
         }
     }
-
+    
 }
-
-
-
-
-
