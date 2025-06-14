@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 public class App {
     static Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
         if (args.length != 2) {
             System.out.println(
@@ -37,31 +38,42 @@ public class App {
 
 
             while (appRunning) {
-                System.out.println("Whats the last name of an Actor that you like?");
+                System.out.println("1. Whats the last name of an Actor that you like?");
                 String lastName = scanner.nextLine();
                 findActorsByLastName(connection, lastName);
 
+                System.out.println("____________________________");
+                scanner.nextLine();
+
+                System.out.println("2. Films by an Actor");
+                System.out.print("Enter an Actor's first Name:");
+                String first = scanner.nextLine();
+                System.out.print("Enter an Actor's last Name: ");
+                String last = scanner.nextLine();
+
+                findFilmsByActor(connection, first, last);
+
             }
 
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
     }
 
-    public static void findActorsByLastName (Connection connection, String lastName){
-       String sql = "SELECT " +
-               " actor_id, last_name, first_name " +
-               "FROM " +
-               " actor " +
-               "WHERE " +
-               " last_name = ? " +
-               "ORDER BY" +
-               " first_name;";
+    public static void findActorsByLastName(Connection connection, String lastName) {
+        String sql = "SELECT " +
+                " actor_id, last_name, first_name " +
+                "FROM " +
+                " actor " +
+                "WHERE " +
+                " last_name = ? " +
+                "ORDER BY" +
+                " first_name;";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            preparedStatement.setString(1,lastName);
+            preparedStatement.setString(1, lastName);
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 boolean found = false;
@@ -79,11 +91,45 @@ public class App {
                     System.out.println("No actors found with that name: " + lastName);
                 }
 
-        }
+            }
 
-    } catch (SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
+    public static void findFilmsByActor(Connection connection, String firstName, String lastName) {
+        String sql = "SELECT f.title " +
+                "FROM film f " +
+                "JOIN film_actor fa ON f.film_id = fa.film_id " +
+                "JOIN actor a ON fa.actor_id = a.actor_id " +
+                "WHERE a.first_name = ? AND a.last_name = ? " +
+                "ORDER BY f.title";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, firstName);
+            preparedStatement.setString(2, lastName);
+
+            String fullName = firstName + " " + lastName;
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                boolean found = false;
+                System.out.printf("\nMovies with " + fullName);
+                System.out.println("\n---------------------------------");
+
+                while (resultSet.next()) {
+                    String title = resultSet.getString("title");
+                    System.out.println(title);
+                    found = true;
+                }
+                if (!found) {
+                    System.out.println("No movies found with " + fullName + ":");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 
