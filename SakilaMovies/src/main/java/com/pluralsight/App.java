@@ -43,7 +43,6 @@ public class App {
                 findActorsByLastName(connection, lastName);
 
                 System.out.println("____________________________");
-                scanner.nextLine();
 
                 System.out.println("2. Films by an Actor");
                 System.out.print("Enter an Actor's first Name:");
@@ -99,6 +98,7 @@ public class App {
     }
 
     public static void findFilmsByActor(Connection connection, String firstName, String lastName) {
+        //sql query
         String sql = "SELECT f.title " +
                 "FROM film f " +
                 "JOIN film_actor fa ON f.film_id = fa.film_id " +
@@ -107,22 +107,29 @@ public class App {
                 "ORDER BY f.title";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            //setting parameters for the first and last name the "?"s
             preparedStatement.setString(1, firstName);
             preparedStatement.setString(2, lastName);
 
+            //for output
             String fullName = firstName + " " + lastName;
 
+            //check if there are any results BEFORE printing
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                boolean found = false;
-                System.out.printf("\nMovies with " + fullName);
-                System.out.println("\n---------------------------------");
 
-                while (resultSet.next()) {
+                //Printing  film title
+                if(resultSet.next()) {
+                    System.out.println("\n Movies with " + fullName);
+                    System.out.println("\n-------------------------");
+
+
+                    //already on first row, so do/while so do/while ensures we don't skip it
+                    do {
                     String title = resultSet.getString("title");
                     System.out.println(title);
-                    found = true;
-                }
-                if (!found) {
+
+                    } while (resultSet.next());
+            } else {
                     System.out.println("No movies found with " + fullName + ":");
                 }
             }
@@ -130,6 +137,7 @@ public class App {
             e.printStackTrace();
         }
     }
+
 
 }
 
